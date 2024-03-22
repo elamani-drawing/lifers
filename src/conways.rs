@@ -18,16 +18,8 @@ pub struct ConwaysGrid {
 
 // Implémentation d'une méthode pour afficher la grille
 impl fmt::Display for ConwaysGrid {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for row in 0..self.rows {
-            for col in 0..self.cols {
-                let index = self.index(row, col);
-                let symbol = if self.current_cells[index] >= 1 { "■" } else { "□" };
-                write!(f, "{}", symbol)?;
-            }
-            writeln!(f)?;
-        }
-        Ok(())
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { 
+        grid_fmt(f, self.rows, self.cols, &self.current_cells)
     }
 }
 
@@ -147,10 +139,7 @@ impl Grid for ConwaysGrid  {
     /// assert_eq!(grid.is_alive(1, 1), false);
     /// ```
     fn set_cell_state(&mut self, row: usize, col: usize, alive: u8) {
-        let index : usize = self.index(row, col);
-        println!("--al {}", alive);
-        self.current_cells[index] = alive; 
-        println!("{:?}", self.current_cells);
+        grid_set_cell_state(row, col, alive, &mut self.current_cells, self.cols)
     }
     
     
@@ -177,10 +166,8 @@ impl Grid for ConwaysGrid  {
     /// // Vérifie si la cellule est maintenant vivante
     /// assert_eq!(grid.is_alive(1, 1), true);
     /// ```
-    fn toggle_cell_state(&mut self, row: usize, col: usize) {
-        let index = self.index(row, col);
-        // Inverse l'état de la cellule : de vivante à morte ou de morte à vivante
-        self.current_cells[index] = if self.current_cells[index] >= 1 { 0 } else { 1 };
+    fn toggle_cell_state(&mut self, row: usize, col: usize) { 
+        grid_toggle_cell_state(row, col, &mut self.current_cells, self.cols)
     }
 
     /// Vérifie si une cellule spécifiée dans la grille est vivante.
@@ -205,8 +192,8 @@ impl Grid for ConwaysGrid  {
     /// // Vérifie si la cellule en haut à gauche est vivante
     /// assert_eq!(grid.is_alive(0, 0), false);
     /// ```
-    fn is_alive(&self, row: usize, col: usize) -> bool{
-        self.current_cells[self.index(row, col)] >= 1
+    fn is_alive(&self, row: usize, col: usize) -> bool{ 
+        grid_is_alive(row, col, &self.current_cells, self.cols)
     }
 
     /// Calcule l'index d'une cellule dans le vecteur représentant la grille.
@@ -232,8 +219,8 @@ impl Grid for ConwaysGrid  {
     /// let index = grid.index(2, 2);
     /// assert_eq!(index, 8);
     /// ```
-    fn index(&self, row: usize, col: usize) -> usize {
-        row * self.cols + col
+    fn index(&self, row: usize, col: usize) -> usize { 
+        grid_index(row, col, self.cols)
     }
 
     /// Compte le nombre de voisins vivants d'une cellule spécifiée dans la grille.
@@ -268,47 +255,7 @@ impl Grid for ConwaysGrid  {
     ///
     /// ```
     fn count_neighbors(&self, row: usize, col: usize) -> usize {
-        let mut count = 0;
-        // Parcours des cellules voisines de la cellule spécifiée
-        for i in (row as isize - 1)..=(row as isize + 1) {
-            for j in (col as isize - 1)..=(col as isize + 1) {
-                if self.toricgrid {
-                    // Si la grille est torique, ajuste les indices des bords
-                    let mut i_wrapped = i;
-                    let mut j_wrapped = j;
-                    // Ajustement des indices pour les bords
-                    if i_wrapped < 0 {
-                        i_wrapped = self.rows as isize - 1;
-                    } else if i_wrapped >= self.rows as isize {
-                        i_wrapped = 0;
-                    }
-                    if j_wrapped < 0 {
-                        j_wrapped = self.cols as isize - 1;
-                    } else if j_wrapped >= self.cols as isize {
-                        j_wrapped = 0;
-                    }
-                    let index = self.index(i_wrapped as usize, j_wrapped as usize);
-                    // Vérification et comptage des voisins vivants
-                    if !(i == row as isize && j == col as isize) && self.current_cells[index] >= 1 {
-                        count += 1;
-                    }
-                }  else {
-                    // Si la grille n'est pas torique, on compte les voisins normalement
-                    if i >= 0
-                        && i < self.rows as isize
-                        && j >= 0
-                        && j < self.cols as isize
-                        && !(i == row as isize && j == col as isize)
-                    {
-                        let index = self.index(i as usize, j as usize);
-                        if self.current_cells[index] >= 1 {
-                            count += 1;
-                        }
-                    }
-                }
-            }
-        }
-        count
+        grid_count_neighbors(row, col, &self.current_cells, self.rows, self.cols, self.toricgrid)
     }
 
     /// Met à jour l'état de la grille selon les règles du jeu de la vie.
@@ -327,24 +274,7 @@ impl Grid for ConwaysGrid  {
     /// grid.update();
     /// ```
     fn update(&mut self) {
-        // Parcours de chaque cellule de la grille
-        for row in 0..self.rows {
-            for col in 0..self.cols {
-                let index = self.index(row, col); // Calcul de l'index de la cellule actuelle
-                let neighbors_count = self.count_neighbors(row, col); // Comptage des voisins vivants de la cellule actuelle
-                // Application des règles du jeu de la vie pour mettre à jour l'état de la cellule
-                self.next_cells[index] = match (self.current_cells[index], neighbors_count) {
-                    // Si la cellule est vivante et a 2 ou 3 voisins vivants, elle reste vivante
-                    (cell, 2) | (cell, 3) if cell > 1 => cell,
-                    // Si la cellule est morte et a exactement 3 voisins vivants, elle devient vivante
-                    (_, 3) => 1,
-                    // Sinon, la cellule meurt
-                    _ => 0,
-                };
-            }
-        }
-        // Échange des vecteurs d'état actuel avec le prochain pour mettre à jour l'état de la grille
-        std::mem::swap(&mut self.current_cells, &mut self.next_cells);
+        grid_update(&mut self.current_cells, &mut self.next_cells, self.rows, self.cols, self.toricgrid);
     }
 
 }
