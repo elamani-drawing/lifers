@@ -233,11 +233,11 @@ pub fn grid_set_cell_state(
 ///
 /// // Inverse l'état de la cellule en haut à gauche
 /// grid_toggle_cell_state(0, 0, &mut current_cells, cols);
-/// // Vérifie si la cellule en haut à gauche est maintenant morte
+/// // Vérifie si la cellule en haut à gauche est maintenant vivante
 /// assert_eq!(current_cells[0], 1);
 /// // Inverse à nouveau l'état de la même cellule
 /// grid_toggle_cell_state(0, 0, &mut current_cells, cols);
-/// // Vérifie si la cellule en haut à gauche est maintenant vivante
+/// // Vérifie si la cellule en haut à gauche est maintenant morte
 /// assert_eq!(current_cells[0], 0);
 /// ```
 pub fn grid_toggle_cell_state(row: usize, col: usize, current_cells: &mut Vec<u8>, cols: usize) {
@@ -273,7 +273,7 @@ pub fn grid_toggle_cell_state(row: usize, col: usize, current_cells: &mut Vec<u8
 ///
 /// // Vérifie si la cellule en haut à droite est vivante
 /// assert_eq!(grid_is_alive(0, 2, &current_cells, cols), false);
-/// // Vérifie si la cellule en milieu haut est vivante
+/// // Vérifie si la cellule en row 1 et colonne 0 est vivante
 /// assert_eq!(grid_is_alive(1, 0, &current_cells, cols), true);
 /// // Vérifie si la cellule en bas à droite est vivante
 /// assert_eq!(grid_is_alive(2, 2, &current_cells, cols), false);
@@ -439,7 +439,7 @@ mod tests {
         let cols = 3;
         let toricgrid = true;
 
-        // Vérifie le nombre de voisins de la cellule centrale
+        // Vérifie le nombre de voisins de la cellule en row 1 et colonne
         assert_eq!(grid_count_neighbors(1, 1, &current_cells, rows, cols, toricgrid), 2);
         // Vérifie le nombre de voisins de la cellule en haut à gauche
         assert_eq!(grid_count_neighbors(0, 0, &current_cells, rows, cols, toricgrid), 2);
@@ -458,7 +458,7 @@ mod tests {
         let cols = 3;
         let toricgrid = false;
 
-        // Vérifie le nombre de voisins de la cellule centrale
+        // Vérifie le nombre de voisins de la cellule centrale en row 1 et colonne 1
         assert_eq!(grid_count_neighbors(1, 1, &current_cells, rows, cols, toricgrid), 2);
         // Vérifie le nombre de voisins de la cellule en haut à gauche
         assert_eq!(grid_count_neighbors(0, 0, &current_cells, rows, cols, toricgrid), 1);

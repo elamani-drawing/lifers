@@ -244,13 +244,13 @@ impl Grid for ConwaysGrid  {
     ///
     /// grid.update(); // Met à jour l'état de la grille au step suivant
     ///
-    /// // Compte les voisins vivants de la cellule centrale
+    /// // Compte les voisins vivants d'une cellule
     /// assert_eq!(grid.count_neighbors(1, 1), 0); 
     ///
     /// // Met une cellule à l'état vivant
     /// grid.set_cell_state(1, 0, 1);
     ///
-    /// // Compte les voisins vivants de la cellule centrale
+    /// // Compte les voisins vivants d'une cellule
     /// assert_eq!(grid.count_neighbors(1, 1), 1); 
     ///
     /// ```
@@ -291,7 +291,7 @@ mod tests {
         grid.set_cell_state(0, 1, 1);
         grid.set_cell_state(2, 1, 1);
 
-        // Vérification des voisins de la cellule centrale
+        // Vérification des voisins de la cellule row 1 colonne 1
         assert_eq!(grid.count_neighbors(1, 1), 2);
         // Vérification des voisins de la cellule en haut à gauche
         assert_eq!(grid.count_neighbors(0, 0), 2);
@@ -306,7 +306,7 @@ mod tests {
         grid.set_cell_state(0, 1, 1);
         grid.set_cell_state(2, 1, 1);
 
-        // Vérification des voisins de la cellule centrale
+        // Vérification des voisins de la cellule row 1 colonne 1
         assert_eq!(grid.count_neighbors(1, 1), 2);
         // Vérification des voisins de la cellule en haut à gauche
         assert_eq!(grid.count_neighbors(0, 0), 1);
