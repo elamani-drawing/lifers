@@ -1,8 +1,9 @@
 use std::fmt;
 use rand::prelude::*;
+use crate::life::*;
 
 /// Structure représentant une grille du jeu de la vie.
-pub struct Grid {
+pub struct ConwaysGrid {
     /// Vecteur contenant l'état actuel de chaque cellule de la grille.
     current_cells: Vec<u8>,
     /// Vecteur contenant l'état suivant de chaque cellule de la grille, utilisé pour éviter de copier la grille inutilement à chaque mise à jour.
@@ -15,9 +16,8 @@ pub struct Grid {
     toricgrid: bool,
 }
 
-
 // Implémentation d'une méthode pour afficher la grille
-impl fmt::Display for Grid {
+impl fmt::Display for ConwaysGrid {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for row in 0..self.rows {
             for col in 0..self.cols {
@@ -31,7 +31,11 @@ impl fmt::Display for Grid {
     }
 }
 
-impl Grid {
+impl Grid for ConwaysGrid  {
+    
+    fn display(&self) {
+        println!("{}",self);
+    }
     /// Initialise une nouvelle grille du jeu de la vie avec des cellules mortes.
     ///
     /// # Arguments
@@ -43,13 +47,14 @@ impl Grid {
     /// # Exemple
     ///
     /// ```
+    /// use crate::lifers::ConwaysGrid;
     /// use crate::lifers::Grid;
     ///
     /// // Crée une nouvelle grille 3x3 avec des cellules mortes
-    /// let grid = Grid::new(3, 3, true);
+    /// let grid = ConwaysGrid::new(3, 3, true);
     /// ```
-    pub fn new(rows: usize, cols: usize, toricgrid : bool) -> Grid {
-        Grid {
+    fn new(rows: usize, cols: usize, toricgrid : bool) -> ConwaysGrid {
+        ConwaysGrid {
             current_cells: vec![0; rows * cols],
             next_cells: vec![0; rows * cols],
             rows,
@@ -70,12 +75,13 @@ impl Grid {
     /// # Exemple
     ///
     /// ```
+    /// use crate::lifers::ConwaysGrid;
     /// use crate::lifers::Grid;
     ///
     /// // Crée une nouvelle grille 3x3 avec des cellules dont l'état est aléatoire
-    /// let grid = Grid::new_random(3, 3, true);
+    /// let grid = ConwaysGrid::new_random(3, 3, true);
     /// ```
-    pub fn new_random(rows: usize, cols: usize, toricgrid : bool) -> Grid {
+    fn new_random(rows: usize, cols: usize, toricgrid : bool) -> ConwaysGrid {
         let mut rng : ThreadRng = rand::thread_rng();
         let mut current_cells : Vec<u8> = Vec::with_capacity(rows * cols);
         for _ in 0..(rows * cols) {
@@ -83,7 +89,7 @@ impl Grid {
             current_cells.push(cell_state);
         }
 
-        Grid {
+        ConwaysGrid {
             current_cells,
             next_cells: vec![0; rows * cols],
             rows,
@@ -93,21 +99,21 @@ impl Grid {
     }
 
     /// Renvoie le nombre de lignes de la grille.
-    pub fn rows(&self) -> usize {
+    fn rows(&self) -> usize {
         self.rows
     }
 
     /// Renvoie le nombre de colonnes de la grille.
-    pub fn cols(&self) -> usize {
+    fn cols(&self) -> usize {
         self.cols
     }
 
     /// Indique si les bords de la grille sont connectés, formant une grille torique.
-    pub fn is_toricgrid(&self) -> bool {
+    fn is_toricgrid(&self) -> bool {
         self.toricgrid
     }
 
-    pub fn current_cells(&self) -> &Vec<u8> {
+    fn current_cells(&self) -> &Vec<u8> {
         &self.current_cells
     }
 
@@ -123,9 +129,10 @@ impl Grid {
     /// # Exemple
     ///
     /// ```
+    /// use crate::lifers::ConwaysGrid;
     /// use crate::lifers::Grid;
     ///
-    /// let mut grid = Grid::new(3, 3, true);
+    /// let mut grid = ConwaysGrid::new(3, 3, true);
     ///
     /// // Met une cellule à l'état vivant
     /// grid.set_cell_state(1, 1, 1);
@@ -139,7 +146,7 @@ impl Grid {
     /// // Vérifie si la cellule est maintenant morte
     /// assert_eq!(grid.is_alive(1, 1), false);
     /// ```
-    pub fn set_cell_state(&mut self, row: usize, col: usize, alive: u8) {
+    fn set_cell_state(&mut self, row: usize, col: usize, alive: u8) {
         let index : usize = self.index(row, col);
         println!("--al {}", alive);
         self.current_cells[index] = alive; 
@@ -159,9 +166,10 @@ impl Grid {
     /// # Exemple
     ///
     /// ```
+    /// use crate::lifers::ConwaysGrid;
     /// use crate::lifers::Grid;
     ///
-    /// let mut grid = Grid::new(3, 3, true);
+    /// let mut grid = ConwaysGrid::new(3, 3, true);
     ///
     /// // Inverse l'état de la cellule
     /// grid.toggle_cell_state(1, 1);
@@ -169,7 +177,7 @@ impl Grid {
     /// // Vérifie si la cellule est maintenant vivante
     /// assert_eq!(grid.is_alive(1, 1), true);
     /// ```
-    pub fn toggle_cell_state(&mut self, row: usize, col: usize) {
+    fn toggle_cell_state(&mut self, row: usize, col: usize) {
         let index = self.index(row, col);
         // Inverse l'état de la cellule : de vivante à morte ou de morte à vivante
         self.current_cells[index] = if self.current_cells[index] >= 1 { 0 } else { 1 };
@@ -189,14 +197,15 @@ impl Grid {
     /// # Exemple
     ///
     /// ```
+    /// use crate::lifers::ConwaysGrid;
     /// use crate::lifers::Grid;
     ///
-    /// let mut grid = Grid::new(3, 3, true); 
+    /// let mut grid = ConwaysGrid::new(3, 3, true); 
     ///
     /// // Vérifie si la cellule en haut à gauche est vivante
     /// assert_eq!(grid.is_alive(0, 0), false);
     /// ```
-    pub fn is_alive(&self, row: usize, col: usize) -> bool{
+    fn is_alive(&self, row: usize, col: usize) -> bool{
         self.current_cells[self.index(row, col)] >= 1
     }
 
@@ -214,15 +223,16 @@ impl Grid {
     /// # Exemple
     ///
     /// ```
+    /// use crate::lifers::ConwaysGrid;
     /// use crate::lifers::Grid;
     ///
-    /// let grid = Grid::new(3, 3, true);
+    /// let grid = ConwaysGrid::new(3, 3, true);
     ///
     /// // Calcule l'index de la cellule en bas à droite dans une grille 3x3
     /// let index = grid.index(2, 2);
     /// assert_eq!(index, 8);
     /// ```
-    pub fn index(&self, row: usize, col: usize) -> usize {
+    fn index(&self, row: usize, col: usize) -> usize {
         row * self.cols + col
     }
 
@@ -240,9 +250,10 @@ impl Grid {
     /// # Exemple
     ///
     /// ```
+    /// use crate::lifers::ConwaysGrid;
     /// use crate::lifers::Grid;
     ///
-    /// let mut grid = Grid::new(3, 3, true);
+    /// let mut grid = ConwaysGrid::new(3, 3, true);
     ///
     /// grid.update(); // Met à jour l'état de la grille au step suivant
     ///
@@ -256,7 +267,7 @@ impl Grid {
     /// assert_eq!(grid.count_neighbors(1, 1), 1); 
     ///
     /// ```
-    pub fn count_neighbors(&self, row: usize, col: usize) -> usize {
+    fn count_neighbors(&self, row: usize, col: usize) -> usize {
         let mut count = 0;
         // Parcours des cellules voisines de la cellule spécifiée
         for i in (row as isize - 1)..=(row as isize + 1) {
@@ -307,14 +318,15 @@ impl Grid {
     /// # Exemple
     ///
     /// ```
+    /// use crate::lifers::ConwaysGrid;
     /// use crate::lifers::Grid;
     ///
-    /// let mut grid = Grid::new(3, 3, true);
+    /// let mut grid = ConwaysGrid::new(3, 3, true);
     ///
     /// // Met à jour l'état de la grille selon les règles du jeu de la vie
     /// grid.update();
     /// ```
-    pub fn update(&mut self) {
+    fn update(&mut self) {
         // Parcours de chaque cellule de la grille
         for row in 0..self.rows {
             for col in 0..self.cols {
@@ -343,9 +355,9 @@ mod tests {
     use super::*;
 
     #[test]
-    pub fn test_count_neighbors_toricgrid_enabled() {
+    fn test_count_neighbors_toricgrid_enabled() {
         // Création d'une grille 3x3 avec toricgrid activé 
-        let mut grid : Grid = Grid::new(3, 3, true);
+        let mut grid : ConwaysGrid = ConwaysGrid::new(3, 3, true);
         grid.set_cell_state(0, 1, 1);
         grid.set_cell_state(2, 1, 1);
 
@@ -358,9 +370,9 @@ mod tests {
     }
 
     #[test]
-    pub fn test_count_neighbors_toricgrid_disabled() {
+    fn test_count_neighbors_toricgrid_disabled() {
         // Création d'une grille 3x3 avec toricgrid désactivé 
-        let mut grid : Grid = Grid::new(3, 3, false);
+        let mut grid : ConwaysGrid = ConwaysGrid::new(3, 3, false);
         grid.set_cell_state(0, 1, 1);
         grid.set_cell_state(2, 1, 1);
 
