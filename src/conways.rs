@@ -1,5 +1,5 @@
 use crate::life::*;
-use ggez::{Context, GameResult};
+use ggez::{graphics::Color, Context, GameResult};
 use rand::prelude::*;
 use std::fmt;
 
@@ -16,6 +16,8 @@ pub struct ConwaysGrid {
     cols: usize,
     /// Indique si les bords de la grille sont connectés, formant une grille torique. Si vrai, les bords gauche et droit ainsi que les bords supérieur et inférieur sont connectés.
     toricgrid: bool,
+    color_alive: Option<Color>, 
+    color_not_alive: Option<Color>,
 }
 
 // Implémentation d'une méthode pour afficher la grille
@@ -53,6 +55,8 @@ impl Grid for ConwaysGrid {
             rows,
             cols,
             toricgrid: toricgrid,
+            color_alive: Some(Color::from_rgb(0, 0, 0)),
+            color_not_alive: Some(Color::from_rgb(204, 204, 204)),
         }
     }
 
@@ -87,9 +91,57 @@ impl Grid for ConwaysGrid {
             rows,
             cols,
             toricgrid: toricgrid,
+            color_alive: Some(Color::from_rgb(0, 0, 0)),
+            color_not_alive: Some(Color::from_rgb(204, 204, 204)),
         }
     }
 
+    /// Crée une nouvelle grille à partir d'un vecteur de cellules donné, avec les dimensions spécifiées et une option pour une grille torique.
+    ///
+    /// # Arguments
+    ///
+    /// * `cels` - Le vecteur de cellules à utiliser pour initialiser la grille. Chaque valeur du vecteur représente l'état d'une cellule.
+    /// * `rows` - Le nombre de lignes de la grille.
+    /// * `cols` - Le nombre de colonnes de la grille.
+    /// * `toricgrid` - Un booléen indiquant si les bords de la grille sont connectés, formant une grille torique.
+    ///
+    /// # Panics
+    ///
+    /// Cette méthode panique si la longueur du vecteur `cels` ne correspond pas au nombre total de cellules dans la grille (`rows * cols`).
+    ///
+    /// # Exemple
+    ///
+    /// ```
+    /// use crate::lifers::Grid;
+    /// use crate::lifers::ConwaysGrid;
+    ///
+    /// // Crée une nouvelle grille à partir d'un vecteur de cellules avec des dimensions 3x3
+    /// let grid = ConwaysGrid::from_vect(vec![0, 1, 0, 0, 0, 1, 1, 1, 0], 3, 3, true);
+    /// ```
+    fn from_vect(cels: Vec<u8>, rows: usize, cols: usize, toricgrid: bool) -> Self {
+        // Vérifie si la longueur du vecteur correspond au nombre total de cellules dans la grille
+        assert_eq!(cels.len(), rows * cols);
+
+        ConwaysGrid {
+            current_cells: cels,
+            next_cells: vec![0; rows * cols],
+            rows,
+            cols,
+            toricgrid,
+            color_alive: Some(Color::from_rgb(0, 0, 0)), // Noir pour les cellules vivantes par défaut
+            color_not_alive: Some(Color::from_rgb(204, 204, 204)), // Gris clair pour les cellules mortes par défaut
+        }
+    }
+
+    /// Setter pour la couleur des cellules vivantes
+    fn set_color_alive(&mut self, color: Option<Color>) {
+        self.color_alive = color;
+    }
+
+    /// Setter pour la couleur des cellules mortes
+    fn set_color_not_alive(&mut self, color: Option<Color>) {
+        self.color_not_alive = color;
+    }
     /// Renvoie le nombre de lignes de la grille.
     fn rows(&self) -> usize {
         self.rows
@@ -311,7 +363,7 @@ impl Grid for ConwaysGrid {
     ///
     /// Cette méthode peut être utilisée pour dessiner une grille de jeu dans une fenêtre `ggez`.
     fn draw(&self, ctx: &mut Context, cell_size: f32) -> GameResult {
-        draw_grid(ctx, self, cell_size)
+        draw_grid(ctx, self, cell_size, self.color_alive, self.color_not_alive)
     }
 }
 

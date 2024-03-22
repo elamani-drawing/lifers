@@ -10,8 +10,8 @@ fn main() {
         .build()
         .expect("aieee, could not create ggez context!");
  
-    let grid : ConwaysGrid = ConwaysGrid::new_random(50, 50, true);
-    let my_game :LifeGui<ConwaysGrid> = LifeGui::new(grid.clone(), 20.);
+    let grid : ConwaysGrid = ConwaysGrid::new_random(100, 100, true);
+    let my_game :LifeGui<ConwaysGrid> = LifeGui::new(grid.clone(), 15.);
 
     event::run(ctx, event_loop, my_game);
 }

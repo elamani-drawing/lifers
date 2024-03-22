@@ -1,6 +1,6 @@
 use std::fmt;
 
-use ggez::{graphics, Context, GameResult};
+use ggez::{graphics::{self, Color}, Context, GameResult};
 
 pub trait Grid {
     // Méthode pour afficher la grille
@@ -25,17 +25,26 @@ pub trait Grid {
     /// * `toricgrid` - Le nombre de colonnes de la grille.
     ///
     fn new_random(rows: usize, cols: usize, toricgrid: bool) -> Self;
+    
+    /// Méthode pour créer une grille à partir d'un vecteur de cellules
+    fn from_vect(cels: Vec<u8>, rows: usize, cols: usize, toricgrid: bool) -> Self ;
 
-    // Méthode pour renvoyer le nombre de lignes de la grille
+    /// Setter pour la couleur des cellules vivantes
+    fn set_color_alive(&mut self, color: Option<Color>) ;
+
+    /// Setter pour la couleur des cellules mortes
+    fn set_color_not_alive(&mut self, color: Option<Color>) ;
+
+    /// Méthode pour renvoyer le nombre de lignes de la grille
     fn rows(&self) -> usize;
 
-    // Méthode pour renvoyer le nombre de colonnes de la grille
+    /// Méthode pour renvoyer le nombre de colonnes de la grille
     fn cols(&self) -> usize;
 
-    // Méthode pour indiquer si les bords de la grille sont connectés (forme une grille torique)
+    /// Méthode pour indiquer si les bords de la grille sont connectés (forme une grille torique)
     fn is_toricgrid(&self) -> bool;
 
-    // Méthode pour renvoyer une référence vers le vecteur contenant l'état actuel des cellules
+    /// Méthode pour renvoyer une référence vers le vecteur contenant l'état actuel des cellules
     fn current_cells(&self) -> &Vec<u8>;
 
     /// Définit l'état d'une cellule spécifiée dans la grille.
@@ -469,17 +478,18 @@ pub fn grid_update(
 ///
 /// Cette fonction peut retourner une erreur de type `GameError` si une erreur survient lors du dessin.
 ///
-pub fn draw_grid<G: Grid>(ctx: &mut Context, grid: &G, cell_size: f32) -> GameResult {
+pub fn draw_grid<G: Grid>(ctx: &mut Context, grid: &G, cell_size: f32, color_alive : Option<Color>, color_not_alive : Option<Color>) -> GameResult {
     let mut canvas = graphics::Canvas::from_frame(ctx, graphics::Color::BLACK);
     for row in 0..grid.rows() {
         for col in 0..grid.cols() {
             let x = col as f32 * cell_size;
             let y = row as f32 * cell_size;
             let rect = graphics::Rect::new(x, y, cell_size, cell_size);
-            let color = if grid_is_alive(row, col, &grid.current_cells(), grid.cols()) {
-                graphics::Color::BLACK
-            } else {
-                graphics::Color::WHITE
+            // graphics::Color::BLACK
+            let color : Color = if grid_is_alive(row, col, &grid.current_cells(), grid.cols()) {
+                color_alive.expect("Color for dead cells not found")
+            } else { 
+                color_not_alive.expect("Color for dead cells not found")
             };
             let mesh: graphics::Mesh =
                 graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), rect, color)?;
