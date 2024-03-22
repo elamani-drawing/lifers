@@ -1,5 +1,7 @@
 use std::fmt;
 
+use ggez::{graphics, Context, GameResult};
+
 pub trait Grid {
     // Méthode pour afficher la grille
     fn display(&self);
@@ -88,6 +90,31 @@ pub trait Grid {
     ///
     /// Cette méthode parcourt chaque cellule de la grille, compte ses voisins vivants et applique les règles du jeu pour mettre à jour son état.
     fn update(&mut self);
+
+    /// Dessine la grille en utilisant le contexte `ctx` spécifié et la taille de cellule `cell_size`.
+    ///
+    /// Cette méthode appelle la fonction `draw_grid` pour dessiner la grille en utilisant le contexte
+    /// `ctx` et la taille de cellule `cell_size`.
+    ///
+    /// # Arguments
+    ///
+    /// * `ctx` - Le contexte du jeu.
+    /// * `cell_size` - La taille de chaque cellule de la grille.
+    ///
+    /// # Erreurs
+    ///
+    /// Cette méthode peut retourner une erreur de type `GameError` si une erreur survient lors du dessin.
+    ///
+    /// # Exemple
+    ///
+    /// ```
+    /// // grid = ConwaysGrid::new_random(5, 5, true);
+    /// // grid.draw(&mut ctx, cell_size)?;
+    ///
+    /// ```
+    ///
+    /// Cette méthode peut être utilisée pour dessiner une grille de jeu dans une fenêtre `ggez`.
+    fn draw(&self, ctx: &mut Context, cell_size: f32) -> GameResult;
 }
 
 /// Calcule l'index d'une cellule dans le vecteur représentant la grille.
@@ -114,7 +141,7 @@ pub trait Grid {
 /// let index = grid_index(2, 2, cols);
 /// assert_eq!(index, 8);
 /// ```
-pub fn grid_index(row: usize, col: usize, cols: usize) -> usize { 
+pub fn grid_index(row: usize, col: usize, cols: usize) -> usize {
     row * cols + col
 }
 
@@ -133,14 +160,14 @@ pub fn grid_index(row: usize, col: usize, cols: usize) -> usize {
 /// use std::fmt;
 /// use crate::lifers::grid_fmt;
 ///
-/// pub struct ConwaysGrid { 
+/// pub struct ConwaysGrid {
 ///     current_cells: Vec<u8>,  
-///     rows: usize, 
-///     cols: usize, 
-/// } 
-/// 
+///     rows: usize,
+///     cols: usize,
+/// }
+///
 /// impl fmt::Display for ConwaysGrid {
-///     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result { 
+///     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
 ///         grid_fmt(f, self.rows, self.cols, &self.current_cells)
 ///     }
 /// }
@@ -278,7 +305,7 @@ pub fn grid_toggle_cell_state(row: usize, col: usize, current_cells: &mut Vec<u8
 /// // Vérifie si la cellule en bas à droite est vivante
 /// assert_eq!(grid_is_alive(2, 2, &current_cells, cols), false);
 /// ```
-pub fn grid_is_alive(row: usize, col: usize, current_cells: &Vec<u8>, cols: usize) -> bool { 
+pub fn grid_is_alive(row: usize, col: usize, current_cells: &Vec<u8>, cols: usize) -> bool {
     current_cells[grid_index(row, col, cols)] >= 1
 }
 
@@ -408,8 +435,9 @@ pub fn grid_update(
     for row in 0..rows {
         for col in 0..cols {
             let current_index = grid_index(row, col, cols); // Calcul de l'index de la cellule actuelle
-            let neighbors_count = grid_count_neighbors(row, col, &current_cells, rows, cols, toricgrid); // Comptage des voisins vivants de la cellule actuelle
-                                                                  // Application des règles du jeu de la vie pour mettre à jour l'état de la cellule
+            let neighbors_count =
+                grid_count_neighbors(row, col, &current_cells, rows, cols, toricgrid); // Comptage des voisins vivants de la cellule actuelle
+                                                                                       // Application des règles du jeu de la vie pour mettre à jour l'état de la cellule
             next_cells[current_index] = match (current_cells[current_index], neighbors_count) {
                 // Si la cellule est vivante et a 2 ou 3 voisins vivants, elle reste vivante
                 (cell, 2) | (cell, 3) if cell > 1 => cell,
@@ -424,45 +452,94 @@ pub fn grid_update(
     std::mem::swap(current_cells, next_cells);
 }
 
+/// Dessine une grille.
+///
+/// Cette fonction prend un contexte mutable `ctx` de type `&mut Context`, une grille `grid` implémentant le trait `Grid`
+/// et la taille de chaque cellule de la grille `cell_size`.
+///
+/// La grille est dessinée en utilisant la couleur de fond spécifiée (`graphics::Color::BLACK`).
+///
+/// # Arguments
+///
+/// * `ctx` - Le contexte du jeu.
+/// * `grid` - La grille à dessiner.
+/// * `cell_size` - La taille de chaque cellule de la grille.
+///
+/// # Erreurs
+///
+/// Cette fonction peut retourner une erreur de type `GameError` si une erreur survient lors du dessin.
+///
+pub fn draw_grid<G: Grid>(ctx: &mut Context, grid: &G, cell_size: f32) -> GameResult {
+    let mut canvas = graphics::Canvas::from_frame(ctx, graphics::Color::BLACK);
+    for row in 0..grid.rows() {
+        for col in 0..grid.cols() {
+            let x = col as f32 * cell_size;
+            let y = row as f32 * cell_size;
+            let rect = graphics::Rect::new(x, y, cell_size, cell_size);
+            let color = if grid_is_alive(row, col, &grid.current_cells(), grid.cols()) {
+                graphics::Color::BLACK
+            } else {
+                graphics::Color::WHITE
+            };
+            let mesh: graphics::Mesh =
+                graphics::Mesh::new_rectangle(ctx, graphics::DrawMode::fill(), rect, color)?;
+            canvas.draw(&mesh, graphics::DrawParam::default());
+            // graphics::draw(ctx, &mesh, graphics::DrawParam::default());
+        }
+    }
+    canvas.finish(ctx)?;
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_grid_count_neighbors_toricgrid_enabled() {
-        let current_cells = vec![
-            0, 0, 0,
-            2, 0, 2,
-            0, 0, 0,
-        ];
+        let current_cells = vec![0, 0, 0, 2, 0, 2, 0, 0, 0];
         let rows = 3;
         let cols = 3;
         let toricgrid = true;
 
         // Vérifie le nombre de voisins de la cellule en row 1 et colonne
-        assert_eq!(grid_count_neighbors(1, 1, &current_cells, rows, cols, toricgrid), 2);
+        assert_eq!(
+            grid_count_neighbors(1, 1, &current_cells, rows, cols, toricgrid),
+            2
+        );
         // Vérifie le nombre de voisins de la cellule en haut à gauche
-        assert_eq!(grid_count_neighbors(0, 0, &current_cells, rows, cols, toricgrid), 2);
+        assert_eq!(
+            grid_count_neighbors(0, 0, &current_cells, rows, cols, toricgrid),
+            2
+        );
         // Vérifie le nombre de voisins de la cellule en bas à droite
-        assert_eq!(grid_count_neighbors(2, 2, &current_cells, rows, cols, toricgrid), 2);
+        assert_eq!(
+            grid_count_neighbors(2, 2, &current_cells, rows, cols, toricgrid),
+            2
+        );
     }
 
     #[test]
     fn test_grid_count_neighbors_toricgrid_disabled() {
-        let current_cells = vec![
-            0, 0, 0,
-            2, 0, 2,
-            0, 0, 0,
-        ];
+        let current_cells = vec![0, 0, 0, 2, 0, 2, 0, 0, 0];
         let rows = 3;
         let cols = 3;
         let toricgrid = false;
 
         // Vérifie le nombre de voisins de la cellule centrale en row 1 et colonne 1
-        assert_eq!(grid_count_neighbors(1, 1, &current_cells, rows, cols, toricgrid), 2);
+        assert_eq!(
+            grid_count_neighbors(1, 1, &current_cells, rows, cols, toricgrid),
+            2
+        );
         // Vérifie le nombre de voisins de la cellule en haut à gauche
-        assert_eq!(grid_count_neighbors(0, 0, &current_cells, rows, cols, toricgrid), 1);
+        assert_eq!(
+            grid_count_neighbors(0, 0, &current_cells, rows, cols, toricgrid),
+            1
+        );
         // Vérifie le nombre de voisins de la cellule en bas à droite
-        assert_eq!(grid_count_neighbors(2, 2, &current_cells, rows, cols, toricgrid), 1);
+        assert_eq!(
+            grid_count_neighbors(2, 2, &current_cells, rows, cols, toricgrid),
+            1
+        );
     }
 }
