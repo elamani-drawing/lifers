@@ -1,5 +1,5 @@
 use crate::life::*;
-use ggez::{graphics::Color, Context, GameResult};
+use ggez::{graphics::Color, graphics::Canvas, Context, GameResult};
 use rand::prelude::*;
 use std::fmt;
 
@@ -347,6 +347,7 @@ impl Grid for ConwaysGrid {
     /// # Arguments
     ///
     /// * `ctx` - Le contexte du jeu.
+    /// * `canvas` - Le canva sur lequel dessiner.
     /// * `cell_size` - La taille de chaque cellule de la grille.
     ///
     /// # Erreurs
@@ -362,8 +363,8 @@ impl Grid for ConwaysGrid {
     /// ```
     ///
     /// Cette méthode peut être utilisée pour dessiner une grille de jeu dans une fenêtre `ggez`.
-    fn draw(&self, ctx: &mut Context, cell_size: f32) -> GameResult {
-        draw_grid(ctx, self, cell_size, self.color_alive, self.color_not_alive)
+    fn draw(&self, ctx: &mut Context, canvas: &mut Canvas, cell_size: f32) -> GameResult {
+        draw_grid(ctx, canvas, self, cell_size,  self.color_alive, self.color_not_alive)
     }
 }
 

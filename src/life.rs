@@ -1,6 +1,6 @@
 use std::fmt;
 
-use ggez::{graphics::{self, Color}, Context, GameResult};
+use ggez::{graphics::{self, Color, Canvas}, Context, GameResult};
 
 pub trait Grid {
     // Méthode pour afficher la grille
@@ -108,6 +108,7 @@ pub trait Grid {
     /// # Arguments
     ///
     /// * `ctx` - Le contexte du jeu.
+    /// * `canvas` - Le canva sur lequel dessiner.
     /// * `cell_size` - La taille de chaque cellule de la grille.
     ///
     /// # Erreurs
@@ -118,12 +119,12 @@ pub trait Grid {
     ///
     /// ```
     /// // grid = ConwaysGrid::new_random(5, 5, true);
-    /// // grid.draw(&mut ctx, cell_size)?;
+    /// // grid.draw(&mut ctx, &mut canvas, cell_size)?;
     ///
     /// ```
     ///
     /// Cette méthode peut être utilisée pour dessiner une grille de jeu dans une fenêtre `ggez`.
-    fn draw(&self, ctx: &mut Context, cell_size: f32) -> GameResult;
+    fn draw(&self, ctx: &mut Context, canvas : &mut Canvas, cell_size: f32) -> GameResult;
 }
 
 /// Calcule l'index d'une cellule dans le vecteur représentant la grille.
@@ -471,6 +472,7 @@ pub fn grid_update(
 /// # Arguments
 ///
 /// * `ctx` - Le contexte du jeu.
+/// * `canvas` - Le canva sur lequel dessiner.
 /// * `grid` - La grille à dessiner.
 /// * `cell_size` - La taille de chaque cellule de la grille.
 ///
@@ -478,8 +480,7 @@ pub fn grid_update(
 ///
 /// Cette fonction peut retourner une erreur de type `GameError` si une erreur survient lors du dessin.
 ///
-pub fn draw_grid<G: Grid>(ctx: &mut Context, grid: &G, cell_size: f32, color_alive : Option<Color>, color_not_alive : Option<Color>) -> GameResult {
-    let mut canvas = graphics::Canvas::from_frame(ctx, graphics::Color::BLACK);
+pub fn draw_grid<G: Grid>(ctx: &mut Context, canvas : &mut Canvas, grid: &G, cell_size: f32, color_alive : Option<Color>, color_not_alive : Option<Color>) -> GameResult {
     for row in 0..grid.rows() {
         for col in 0..grid.cols() {
             let x = col as f32 * cell_size;
@@ -497,7 +498,7 @@ pub fn draw_grid<G: Grid>(ctx: &mut Context, grid: &G, cell_size: f32, color_ali
             // graphics::draw(ctx, &mesh, graphics::DrawParam::default());
         }
     }
-    canvas.finish(ctx)?;
+    // canvas.finish(ctx)?;
     Ok(())
 }
 

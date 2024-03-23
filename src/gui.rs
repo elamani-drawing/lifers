@@ -1,7 +1,8 @@
-use ggez::input::keyboard::KeyInput;
-use ggez::{Context, input::mouse::MouseButton, input::keyboard::KeyCode, GameResult};  
+use ggez::graphics::{Color,Canvas, PxScale, DrawParam, Text, TextFragment};
+use ggez::{Context, input::mouse::MouseButton, input::keyboard::{KeyCode, KeyInput}, GameResult};  
 use ggez::event::EventHandler;
 use ggez::timer;
+  
 
 use crate::Grid;
 
@@ -9,17 +10,38 @@ pub struct LifeGui<G> {
     grid: G,
     cell_size: f32, 
     is_paused: bool,
-    fps: u32
+    fps: u32,
+    days: u32, 
 }
 
 impl<G: Grid> LifeGui<G> {
     /// Crée une nouvelle instance de `LifeGui` avec la référence à la grille spécifiée.
-    pub fn new(grid: G, cell_size: f32) -> Self { 
-        LifeGui { grid, cell_size , is_paused:false, fps: 60}
+    pub fn new(grid: G, cell_size: f32) -> Self {  
+        LifeGui { grid, cell_size , is_paused:false, fps: 60, days: 0,}
     }
     /// Méthode pour modifier le FPS
     pub fn set_fps(&mut self, fps: u32) {
         self.fps = fps;
+    }
+
+    /// Méthode pour afficher le nombre d'fps et les jours qui se sont écoulés
+    pub fn draw_fps_days(&self, ctx: &mut Context, canvas: &mut Canvas) -> GameResult {
+        // Récupère le nombre d'images par seconde (FPS) depuis le compteur
+        let fps = ctx.time.fps();
+    
+        // Crée une chaîne de caractères formatée pour afficher le FPS
+        let fps_string = format!("FPS: {} \nDays: {}", fps, self.days);
+    
+        // Crée un objet TextFragment pour le texte
+        let text_fragment = TextFragment::new(fps_string)
+            .color(Color::WHITE)
+            .scale(PxScale::from(20.0));
+    
+        // Crée un objet Text à partir du TextFragment
+        let text = Text::new(text_fragment);
+    
+        canvas.draw(&text, DrawParam::from([10.0, 10.0]));
+        Ok(())
     }
     
 }
@@ -30,6 +52,7 @@ impl<G: Grid> EventHandler for LifeGui<G> {
         while ctx.time.check_update_time(self.fps) {
             // Vérifie si le jeu est en pause avant de mettre à jour la grille
             if !self.is_paused {
+                self.days +=1;
                 self.grid.update();
             }
         }
@@ -38,7 +61,11 @@ impl<G: Grid> EventHandler for LifeGui<G> {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult { 
-        self.grid.draw(ctx, self.cell_size)
+        let mut canvas = Canvas::from_frame(ctx, Color::BLACK);
+        let _ = self.grid.draw(ctx, &mut canvas, self.cell_size);
+        self.draw_fps_days(ctx, &mut canvas)?;
+        canvas.finish(ctx)?;
+        Ok(())
     }
 
     fn mouse_button_down_event(&mut self, _ctx: &mut Context, button: MouseButton, x: f32, y: f32) -> GameResult { 
@@ -63,6 +90,4 @@ impl<G: Grid> EventHandler for LifeGui<G> {
         }
         Ok(())
     }
-
-    
 }
