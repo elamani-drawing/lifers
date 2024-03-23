@@ -1,7 +1,7 @@
 use ggez::input::keyboard::KeyInput;
 use ggez::{Context, input::mouse::MouseButton, input::keyboard::KeyCode, GameResult};  
 use ggez::event::EventHandler;
-
+use ggez::timer;
 
 use crate::Grid;
 
@@ -9,22 +9,31 @@ pub struct LifeGui<G> {
     grid: G,
     cell_size: f32, 
     is_paused: bool,
+    fps: u32
 }
 
 impl<G: Grid> LifeGui<G> {
     /// Crée une nouvelle instance de `LifeGui` avec la référence à la grille spécifiée.
     pub fn new(grid: G, cell_size: f32) -> Self { 
-        LifeGui { grid, cell_size , is_paused:false}
+        LifeGui { grid, cell_size , is_paused:false, fps: 60}
+    }
+    /// Méthode pour modifier le FPS
+    pub fn set_fps(&mut self, fps: u32) {
+        self.fps = fps;
     }
     
 }
 
 impl<G: Grid> EventHandler for LifeGui<G> {
-    fn update(&mut self, _ctx: &mut Context) -> GameResult {
-        // Vérifie si le jeu est en pause avant de mettre à jour la grille
-        if !self.is_paused {
-            self.grid.update();
+    fn update(&mut self, ctx: &mut Context) -> GameResult {
+        // Régule la mise à jour en fonction des FPS cibles (par exemple, 60 FPS)
+        while ctx.time.check_update_time(self.fps) {
+            // Vérifie si le jeu est en pause avant de mettre à jour la grille
+            if !self.is_paused {
+                self.grid.update();
+            }
         }
+        timer::yield_now(); // Facultatif : permet de libérer le CPU pour d'autres tâches
         Ok(())
     }
 
