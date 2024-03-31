@@ -16,11 +16,14 @@ pub struct LeniaGrid {
     cols: usize,
     /// Indique si les bords de la grille sont connectés, formant une grille torique. Si vrai, les bords gauche et droit ainsi que les bords supérieur et inférieur sont connectés.
     toricgrid: bool, 
-    /// Filtre à appliqué l'ors de la convolution par filtre pour le calcul de la valeur du voisinage d'une cellule
+    /// Filtre à appliqué l'ors de la convolution par filtre pour le calcul de la valeur du voisinage d'une cellule.
     filter: Vec<u8>,
-    /// le nombre de voisins dans le filtre
+    /// Le nombre de voisins dans le filtre.
     neighbors_filter : usize, 
+    /// La fonction de croissance.
     growth_function : fn(u8)-> u8,
+    /// Une fonction permettant de convertir la valeur de la cellule (0 à 255) en couleur.
+    cell_value_color_mappeur : fn(u8) -> Color,
 }
 
 // Implémentation d'une méthode pour afficher la grille de Lenia
@@ -68,9 +71,14 @@ impl LeniaGrid {
         self.filter = filter;
     }
 
-    /// Setter pour editer la function de croissance
+    /// Setter pour editer la function de croissance.
     pub fn set_growth_function(&mut self, growth_function : fn(u8) -> u8) {
         self.growth_function = growth_function;
+    }
+
+    /// Setter pour editer la function qui indique la couleur de la cellue par rapport à sa valeur.
+    pub fn set_cell_value_color_mappeur(&mut self, cell_value_color_mappeur : fn(u8)-> Color) {
+        self.cell_value_color_mappeur = cell_value_color_mappeur;
     }
 }
 
@@ -93,6 +101,7 @@ impl Grid for LeniaGrid {
             ], // Par defaut nous utilisant un filtre en anneau
             neighbors_filter : 8,
             growth_function : lenia_growth_function_default,
+            cell_value_color_mappeur : map_cell_value_to_color,
         }
     }
     
@@ -117,6 +126,7 @@ impl Grid for LeniaGrid {
             ], // Par defaut nous utilisant un filtre en anneau
             neighbors_filter : 8,
             growth_function : lenia_growth_function_default,
+            cell_value_color_mappeur : map_cell_value_to_color,
         }
     }
     
@@ -137,6 +147,7 @@ impl Grid for LeniaGrid {
             ], // Par defaut nous utilisant un filtre en anneau
             neighbors_filter : 8,
             growth_function : lenia_growth_function_default,
+            cell_value_color_mappeur : map_cell_value_to_color,
         }
     }
      
@@ -198,8 +209,7 @@ impl Grid for LeniaGrid {
         )
     }
     
-    fn update(&mut self) {
-        // finir
+    fn update(&mut self) { 
         grid_update_lenia(
             &mut self.current_cells,
             &mut self.next_cells,
@@ -212,8 +222,7 @@ impl Grid for LeniaGrid {
         );
     }
     
-    fn draw(&self, ctx: &mut ggez::Context, canvas : &mut ggez::graphics::Canvas, cell_size: f32) -> ggez::GameResult {
-        // finir
-        draw_grid(ctx, canvas, self, cell_size,  Some(Color::from_rgb(0, 0, 255)), Some(Color::from_rgb(0, 0, 255)))
+    fn draw(&self, ctx: &mut Context, canvas : &mut Canvas, cell_size: f32) -> GameResult { 
+        draw_grid_lenia(ctx, canvas, self, cell_size, self.cell_value_color_mappeur)
     }
 }

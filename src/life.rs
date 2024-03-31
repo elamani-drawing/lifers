@@ -1,6 +1,6 @@
 use std::fmt;
-
-use ggez::{graphics::{self, Color, Canvas}, Context, GameResult};
+use std::f64::consts::PI;
+use ggez::{graphics::{self, Canvas, Color, Mesh, Rect}, Context, GameResult};
 
 pub trait Grid {
     // Méthode pour afficher la grille
@@ -588,7 +588,18 @@ pub fn grid_convolution_neighbors_lenia(
 
 /// La fonction de croissance qui est appliqué par défaut à LeniaGrid
 pub fn lenia_growth_function_default(value : u8) -> u8 {
-    return value
+    // return value
+    return lenia_growth_function_gaussian(value, 122.0, 30.0)
+}
+
+/// Genere une gaussian
+pub fn lenia_growth_function_gaussian(value: u8, center: f64, spread: f64) -> u8 {
+    // Calcul de la valeur de la fonction de densité de probabilité gaussienne
+    let gaussian_value = (-((value as f64 - center).powi(2) / (2.0 * spread.powi(2)))).exp() / (spread * (2.0 * PI).sqrt()); 
+    // Conversion de la valeur de densité de probabilité à une échelle de 0 à 255
+    let scaled_value = (gaussian_value * 255.0 * 100.0).round() as u8; // Multiplication par 100 car sinon nous perdons en precision à la conversion en u8
+
+    scaled_value
 }
 
 /// Met à jour l'état de la grille selon les règles du jeu de la vie.
@@ -733,8 +744,6 @@ pub fn grid_update_lenia(
 /// Cette fonction prend un contexte mutable `ctx` de type `&mut Context`, une grille `grid` implémentant le trait `Grid`
 /// et la taille de chaque cellule de la grille `cell_size`.
 ///
-/// La grille est dessinée en utilisant la couleur de fond spécifiée (`graphics::Color::BLACK`).
-///
 /// # Arguments
 ///
 /// * `ctx` - Le contexte du jeu.
@@ -751,7 +760,7 @@ pub fn draw_grid<G: Grid>(ctx: &mut Context, canvas : &mut Canvas, grid: &G, cel
         for col in 0..grid.cols() {
             let x = col as f32 * cell_size;
             let y = row as f32 * cell_size;
-            let rect = graphics::Rect::new(x, y, cell_size, cell_size);
+            let rect :  Rect = graphics::Rect::new(x, y, cell_size, cell_size);
             // graphics::Color::BLACK
             let color : Color = if grid_is_alive(row, col, &grid.current_cells(), grid.cols()) {
                 color_alive.expect("Color for dead cells not found")
@@ -766,6 +775,56 @@ pub fn draw_grid<G: Grid>(ctx: &mut Context, canvas : &mut Canvas, grid: &G, cel
     }
     // canvas.finish(ctx)?;
     Ok(())
+}
+
+
+/// Dessine une grille Lénia.
+///
+/// Cette fonction prend un contexte mutable `ctx` de type `&mut Context`, une grille `grid` implémentant le trait `Grid`
+/// et la taille de chaque cellule de la grille `cell_size`.
+///
+/// # Arguments
+///
+/// * `ctx` - Le contexte du jeu.
+/// * `canvas` - Le canva sur lequel dessiner.
+/// * `grid` - La grille à dessiner.
+/// * `cell_size` - La taille de chaque cellule de la grille.
+/// * `cell_value_color_mappeur` - La fonction permettante de convertir la valeur de la cellule en une couleur
+///
+/// # Erreurs
+///
+/// Cette fonction peut retourner une erreur de type `GameError` si une erreur survient lors du dessin.
+///
+pub fn draw_grid_lenia<G: Grid>(ctx: &mut Context, canvas: &mut Canvas, grid: &G, cell_size: f32, cell_value_color_mappeur : fn(u8) -> Color) -> GameResult {
+    let mut color : Color;
+    for row in 0..grid.rows() {
+        for col in 0..grid.cols() {
+            let x = col as f32 * cell_size;
+            let y = row as f32 * cell_size;
+            let rect : Rect =  graphics::Rect::new(x, y, cell_size, cell_size);
+
+            let cell_value: u8 =  grid.current_cells()[grid_index(row, col, grid.cols())];
+            // color = Color::from_rgba(cell_value, cell_value, cell_value, 255);
+            color = cell_value_color_mappeur(cell_value);
+            let mesh : Mesh =  graphics::Mesh::new_rectangle(ctx,  graphics::DrawMode::fill(), rect, color)?;
+            canvas.draw(&mesh,  graphics::DrawParam::default());
+        }
+    }
+    Ok(())
+}
+
+/// Fonction de mapping par défaut pour convertir la valeur de la cellule en couleur
+pub fn map_cell_value_to_color(cell_value: u8) -> Color {
+    // Calcul de la proportion de la valeur de cellule par rapport à la valeur maximale (255)
+    let ratio = cell_value as f32 / 255.0;
+
+    // Dégradé de couleur: Noir (0, 0, 0) à Violet (128, 0, 128) à Jaune (255, 255, 0)
+    let r = (128.0 * ratio) as u8;
+    let g = 0;
+    let b = (128.0 + 127.0 * ratio) as u8;
+
+    // Création et retour de la couleur correspondante
+    Color::from_rgb(r, g, b)
 }
 
 #[cfg(test)]
