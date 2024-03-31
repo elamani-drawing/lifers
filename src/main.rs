@@ -15,7 +15,7 @@ fn main() {
     // grid.set_color_not_alive(Some(Color::from_rgb(0, 0, 0)));
     // let mut my_game :LifeGui<ConwaysGrid> = LifeGui::new(grid.clone(), 8.);
 
-    let grid : LeniaGrid = LeniaGrid::new_random(100, 100, true); 
+    let mut grid : LeniaGrid = LeniaGrid::new_random(100, 100, true);
     let mut my_game :LifeGui<LeniaGrid> = LifeGui::new(grid.clone(), 8.);
     my_game.set_fps(3);
     event::run(ctx, event_loop, my_game);

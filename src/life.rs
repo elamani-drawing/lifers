@@ -818,10 +818,24 @@ pub fn map_cell_value_to_color(cell_value: u8) -> Color {
     // Calcul de la proportion de la valeur de cellule par rapport à la valeur maximale (255)
     let ratio = cell_value as f32 / 255.0;
 
-    // Dégradé de couleur: Noir (0, 0, 0) à Violet (128, 0, 128) à Jaune (255, 255, 0)
-    let r = (128.0 * ratio) as u8;
-    let g = 0;
-    let b = (128.0 + 127.0 * ratio) as u8;
+    // Dégradé de couleur: Noir (0, 0, 0) à Violet (128, 0, 128) à Orange (255, 165, 0) à Jaune (255, 255, 0)
+    let r = if ratio < 0.5 {
+        (128.0 * ratio * 2.0) as u8 // Interpolation de 0 à 128 pour le rouge
+    } else {
+        255 // Orange
+    };
+    let g = if ratio < 0.5 {
+        0 // Violet
+    } else if ratio < 0.75 {
+        (165.0 * (ratio - 0.5) * 4.0) as u8 // Interpolation de 0 à 165 pour le vert
+    } else {
+        165 // Orange
+    };
+    let b = if ratio < 0.5 {
+        (128.0 * ratio * 2.0) as u8 // Interpolation de 0 à 128 pour le bleu
+    } else {
+        0 // Jaune
+    };
 
     // Création et retour de la couleur correspondante
     Color::from_rgb(r, g, b)
