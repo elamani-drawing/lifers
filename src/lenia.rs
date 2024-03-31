@@ -21,7 +21,7 @@ pub struct LeniaGrid {
     /// Le nombre de voisins dans le filtre.
     neighbors_filter : usize, 
     /// La fonction de croissance.
-    growth_function : fn(u8)-> u8,
+    growth_function : fn(f64)-> f64,
     /// Une fonction permettant de convertir la valeur de la cellule (0 à 255) en couleur.
     cell_value_color_mappeur : fn(u8) -> Color,
 }
@@ -72,7 +72,7 @@ impl LeniaGrid {
     }
 
     /// Setter pour editer la function de croissance.
-    pub fn set_growth_function(&mut self, growth_function : fn(u8) -> u8) {
+    pub fn set_growth_function(&mut self, growth_function : fn(f64) -> f64) {
         self.growth_function = growth_function;
     }
 

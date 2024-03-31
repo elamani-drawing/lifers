@@ -17,7 +17,7 @@ pub struct LifeGui<G> {
 impl<G: Grid> LifeGui<G> {
     /// Crée une nouvelle instance de `LifeGui` avec la référence à la grille spécifiée.
     pub fn new(grid: G, cell_size: f32) -> Self {  
-        LifeGui { grid, cell_size , is_paused:false, fps: 60, days: 0,}
+        LifeGui { grid, cell_size , is_paused:true, fps: 60, days: 0,}
     }
     /// Méthode pour modifier le FPS
     pub fn set_fps(&mut self, fps: u32) {

@@ -587,19 +587,28 @@ pub fn grid_convolution_neighbors_lenia(
 
 
 /// La fonction de croissance qui est appliqué par défaut à LeniaGrid
-pub fn lenia_growth_function_default(value : u8) -> u8 {
-    // return value
-    return lenia_growth_function_gaussian(value, 122.0, 30.0)
+pub fn lenia_growth_function_default(value : f64) -> f64 {
+    let center = 122.0;
+    let spread = 30.0 ;
+    let gaussian_value =  lenia_growth_function_gaussian(value, center, spread);
+
+    // Normalisation de la valeur pour qu'elle soit comprise entre -1 et 1
+    let max_gaussian_value = (-((center - center).powi(2) / (2.0 * spread.powi(2)))).exp() / (spread * (2.0 * PI).sqrt());
+    let normalized_value = gaussian_value / max_gaussian_value;
+
+    let final_value = value + (normalized_value * 255.0 - center); 
+    if final_value < 0. {
+        return 0. ;
+    }else if  final_value > 255. {
+        return  255.;
+    }
+    final_value
 }
 
 /// Genere une gaussian
-pub fn lenia_growth_function_gaussian(value: u8, center: f64, spread: f64) -> u8 {
+pub fn lenia_growth_function_gaussian(value: f64, center: f64, spread: f64) -> f64 {
     // Calcul de la valeur de la fonction de densité de probabilité gaussienne
-    let gaussian_value = (-((value as f64 - center).powi(2) / (2.0 * spread.powi(2)))).exp() / (spread * (2.0 * PI).sqrt()); 
-    // Conversion de la valeur de densité de probabilité à une échelle de 0 à 255
-    let scaled_value = (gaussian_value * 255.0 * 100.0).round() as u8; // Multiplication par 100 car sinon nous perdons en precision à la conversion en u8
-
-    scaled_value
+    return (-((value - center).powi(2) / (2.0 * spread.powi(2)))).exp() / (spread * (2.0 * PI).sqrt());
 }
 
 /// Met à jour l'état de la grille selon les règles du jeu de la vie.
@@ -723,7 +732,7 @@ pub fn grid_update_lenia(
     toricgrid: bool,
     filter: &[u8], 
     neighbors_filter: usize,
-    growth_function: fn(u8) -> u8,
+    growth_function: fn(f64) -> f64,
 ) {
     // Parcours de chaque cellule de la grille
     for row in 0..rows {
@@ -731,8 +740,8 @@ pub fn grid_update_lenia(
             let current_index: usize = grid_index(row, col, cols); // Calcul de l'index de la cellule actuelle
             let weighted_sum : u16 = grid_convolution_neighbors_lenia(row, col, current_cells, rows, cols, toricgrid, filter); // Calcul de la somme pondérée des valeurs des cellules voisines
             let average : u8 = (weighted_sum / neighbors_filter as u16) as u8; // Calcul de la moyenne des valeurs environnantes
-            let updated_value : u8 = growth_function(average); // Application de la fonction de croissance sur la moyenne des valeurs environnantes
-            next_cells[current_index] = updated_value; // Mise à jour de la valeur de la cellule dans le prochain état de la grille
+            let updated_value : f64 = growth_function(average as f64); // Application de la fonction de croissance sur la moyenne des valeurs environnantes
+            next_cells[current_index] = updated_value as u8; // Mise à jour de la valeur de la cellule dans le prochain état de la grille
         }
     }
     // Échange des vecteurs d'état actuel avec le prochain pour mettre à jour l'état de la grille
