@@ -473,6 +473,118 @@ pub fn grid_get_value_neighbors_lenia(
     sum
 }
 
+/// Applique une convolution avec un filtre sur les valeurs des cases autour d'une cellule spécifiée dans la grille.
+///
+/// # Arguments
+///
+/// * `row` - L'indice de la ligne de la cellule dans la grille.
+/// * `col` - L'indice de la colonne de la cellule dans la grille.
+/// * `current_cells` - Vecteur contenant l'état actuel de chaque cellule de la grille.
+/// * `rows` - Nombre de lignes de la grille.
+/// * `cols` - Nombre de colonnes de la grille.
+/// * `toricgrid` - Indique si les bords de la grille sont connectés, formant une grille torique.
+/// * `filter` - Vecteur contenant les valeurs du filtre à appliquer.
+///
+/// # Returns
+///
+/// La somme pondérée des valeurs des cases autour de la cellule spécifiée en utilisant le filtre donné.
+///
+/// # Exemple
+///
+/// ```
+/// use crate::lifers::grid_convolution_neighbors_lenia;
+///
+/// let current_cells = vec![
+///     1, 2, 3,
+///     4, 5, 6,
+///     7, 8, 9,
+/// ];
+/// let rows = 3;
+/// let cols = 3;
+/// let mut toricgrid = false;
+/// let mut filter = [
+///     1, 1, 1,
+///     1, 0, 1,
+///     1, 1, 1,
+/// ];
+///
+/// // Somme pondérée des valeurs des cases autour de la cellule centrale en utilisant le filtre donné
+/// let mut weighted_sum = grid_convolution_neighbors_lenia(1, 1, &current_cells, rows, cols, toricgrid, &filter);
+/// assert_eq!(weighted_sum, 40); // Exemple de résultat arbitraire
+/// // Somme des valeurs des cases autour de 4
+/// weighted_sum = grid_convolution_neighbors_lenia(1, 0, &current_cells, rows, cols, toricgrid, &filter);
+/// assert_eq!(weighted_sum, 23);
+/// toricgrid = true;
+/// // Somme des valeurs des cases autour de 4 en toricgrid
+/// weighted_sum = grid_convolution_neighbors_lenia(1, 0, &current_cells, rows, cols, toricgrid, &filter);
+/// assert_eq!(weighted_sum, 41);
+/// filter = [
+///     1, 0, 1,
+///     1, 0, 1,
+///     1, 0, 1,
+/// ];
+/// // Somme pondérée des valeurs des cases autour de la cellule centrale en utilisant le filtre donné
+/// weighted_sum = grid_convolution_neighbors_lenia(1, 1, &current_cells, rows, cols, toricgrid, &filter);
+/// assert_eq!(weighted_sum, 30); // Exemple de résultat arbitraire
+/// // Somme des valeurs des cases autour de 4
+/// weighted_sum = grid_convolution_neighbors_lenia(1, 0, &current_cells, rows, cols, toricgrid, &filter);
+/// assert_eq!(weighted_sum, 33);
+/// toricgrid = false;
+/// // Somme des valeurs des cases autour de 4 en non toricgrid
+/// weighted_sum = grid_convolution_neighbors_lenia(1, 0, &current_cells, rows, cols, toricgrid, &filter);
+/// assert_eq!(weighted_sum, 15);
+/// ```
+///
+pub fn grid_convolution_neighbors_lenia(
+    row: usize,
+    col: usize,
+    current_cells: &[u8],
+    rows: usize,
+    cols: usize,
+    toricgrid: bool,
+    filter: &[u8],
+) -> u16 {
+    let mut weighted_sum = 0;
+
+    // Parcours des cellules voisines de la cellule spécifiée
+    for i in (row as isize - 1)..=(row as isize + 1) {
+        for j in (col as isize - 1)..=(col as isize + 1) {
+            if toricgrid {
+                // Si la grille est torique, ajuste les indices des bords
+                let mut i_wrapped = i;
+                let mut j_wrapped = j;
+                // Ajustement des indices pour les bords
+                if i_wrapped < 0 {
+                    i_wrapped = rows as isize - 1;
+                } else if i_wrapped >= rows as isize {
+                    i_wrapped = 0;
+                }
+                if j_wrapped < 0 {
+                    j_wrapped = cols as isize - 1;
+                } else if j_wrapped >= cols as isize {
+                    j_wrapped = 0;
+                }
+                let index = grid_index(i_wrapped as usize, j_wrapped as usize, cols);
+                // Calcul de la somme pondérée en utilisant le filtre
+                if !(i == row as isize && j == col as isize) {
+                    weighted_sum += current_cells[index] as u16 * filter[(i - (row as isize) + 1) as usize * 3 + (j - (col as isize) + 1) as usize] as u16;
+                }
+            } else {
+                // Si la grille n'est pas torique, on vérifie que les indices sont dans les limites de la grille
+                if i >= 0 && i < rows as isize && j >= 0 && j < cols as isize {
+                    let index = grid_index(i as usize, j as usize, cols);
+                    // Calcul de la somme pondérée en utilisant le filtre
+                    if !(i == row as isize && j == col as isize) {
+                        weighted_sum += current_cells[index] as u16 * filter[(i - (row as isize) + 1) as usize * 3 + (j - (col as isize) + 1) as usize] as u16;
+                    }
+                }
+            }
+        }
+    }
+
+    weighted_sum
+}
+
 
 /// Met à jour l'état de la grille selon les règles du jeu de la vie.
 ///
