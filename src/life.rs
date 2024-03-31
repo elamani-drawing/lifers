@@ -419,7 +419,7 @@ pub fn grid_count_neighbors(
 /// # Exemple
 ///
 /// ```
-/// use crate::lifers::grid_update;
+/// use crate::lifers::grid_update_conways;
 ///
 /// let mut current_cells = vec![
 ///     0, 0, 0,
@@ -432,9 +432,9 @@ pub fn grid_count_neighbors(
 /// let toricgrid = true;
 ///
 /// // Met à jour l'état de la grille selon les règles du jeu de la vie
-/// grid_update(&mut current_cells, &mut next_cells, rows, cols, toricgrid);
+/// grid_update_conways(&mut current_cells, &mut next_cells, rows, cols, toricgrid);
 /// ```
-pub fn grid_update(
+pub fn grid_update_conways(
     current_cells: &mut Vec<u8>,
     next_cells: &mut Vec<u8>,
     rows: usize,
@@ -460,6 +460,16 @@ pub fn grid_update(
     }
     // Échange des vecteurs d'état actuel avec le prochain pour mettre à jour l'état de la grille
     std::mem::swap(current_cells, next_cells);
+}
+
+pub fn grid_update_lenia(
+    current_cells: &mut Vec<u8>,
+    next_cells: &mut Vec<u8>,
+    rows: usize,
+    cols: usize,
+    toricgrid: bool,
+) {
+
 }
 
 /// Dessine une grille.

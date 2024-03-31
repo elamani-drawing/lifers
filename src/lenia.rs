@@ -128,7 +128,7 @@ impl Grid for LeniaGrid {
     
     fn update(&mut self) {
         // finir
-        grid_update(
+        grid_update_lenia(
             &mut self.current_cells,
             &mut self.next_cells,
             self.rows,

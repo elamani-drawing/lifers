@@ -331,7 +331,7 @@ impl Grid for ConwaysGrid {
     /// grid.update();
     /// ```
     fn update(&mut self) {
-        grid_update(
+        grid_update_conways(
             &mut self.current_cells,
             &mut self.next_cells,
             self.rows,
