@@ -320,7 +320,7 @@ pub fn grid_is_alive(row: usize, col: usize, current_cells: &Vec<u8>, cols: usiz
 /// # Exemple
 ///
 /// ```
-/// use crate::lifers::grid_count_neighbors;
+/// use crate::lifers::grid_count_neighbors_conways;
 ///
 /// let current_cells = vec![
 ///     0, 0, 0,
@@ -332,9 +332,9 @@ pub fn grid_is_alive(row: usize, col: usize, current_cells: &Vec<u8>, cols: usiz
 /// let toricgrid = true;
 ///
 /// // Compte les voisins vivants de la cellule centrale
-/// let neighbors_count = grid_count_neighbors(1, 1, &current_cells, rows, cols, toricgrid);
+/// let neighbors_count = grid_count_neighbors_conways(1, 1, &current_cells, rows, cols, toricgrid);
 /// ```
-pub fn grid_count_neighbors(
+pub fn grid_count_neighbors_conways(
     row: usize,
     col: usize,
     current_cells: &[u8],
@@ -385,6 +385,95 @@ pub fn grid_count_neighbors(
     count
 }
 
+/// Additionne les valeurs des 8 cases autour d'une cellule spécifiée dans la grille.
+///
+/// # Arguments
+///
+/// * `row` - L'indice de la ligne de la cellule dans la grille.
+/// * `col` - L'indice de la colonne de la cellule dans la grille.
+/// * `current_cells` - Vecteur contenant l'état actuel de chaque cellule de la grille.
+/// * `rows` - Nombre de lignes de la grille.
+/// * `cols` - Nombre de colonnes de la grille.
+/// * `toricgrid` - Indique si les bords de la grille sont connectés, formant une grille torique.
+///
+/// # Returns
+///
+/// La somme des valeurs des 8 cases autour de la cellule spécifiée.
+///
+/// # Exemple
+///
+/// ```
+/// use crate::lifers::grid_get_value_neighbors_lenia;
+///
+/// let current_cells = vec![
+///     1, 2, 3,
+///     4, 5, 6,
+///     7, 8, 9,
+/// ];
+/// let rows = 3;
+/// let cols = 3;
+/// let mut toricgrid = false;
+///
+/// // Somme des valeurs des cases autour de la cellule centrale
+/// let mut sum_neighbors = grid_get_value_neighbors_lenia(1, 1, &current_cells, rows, cols, toricgrid);
+/// assert_eq!(sum_neighbors, 40);
+/// // Somme des valeurs des cases autour de 4
+/// sum_neighbors = grid_get_value_neighbors_lenia(1, 0, &current_cells, rows, cols, toricgrid);
+/// assert_eq!(sum_neighbors, 23);
+/// toricgrid = true;
+/// // Somme des valeurs des cases autour de 4 en toricgrid
+/// sum_neighbors = grid_get_value_neighbors_lenia(1, 0, &current_cells, rows, cols, toricgrid);
+/// assert_eq!(sum_neighbors, 41);
+/// ```
+pub fn grid_get_value_neighbors_lenia(
+    row: usize,
+    col: usize,
+    current_cells: &[u8],
+    rows: usize,
+    cols: usize,
+    toricgrid: bool,
+) -> u16 {
+    let mut sum = 0;
+
+    // Parcours des cellules voisines de la cellule spécifiée
+    for i in (row as isize - 1)..=(row as isize + 1) {
+        for j in (col as isize - 1)..=(col as isize + 1) {
+            if toricgrid {
+                // Si la grille est torique, ajuste les indices des bords
+                let mut i_wrapped = i;
+                let mut j_wrapped = j;
+                // Ajustement des indices pour les bords
+                if i_wrapped < 0 {
+                    i_wrapped = rows as isize - 1;
+                } else if i_wrapped >= rows as isize {
+                    i_wrapped = 0;
+                }
+                if j_wrapped < 0 {
+                    j_wrapped = cols as isize - 1;
+                } else if j_wrapped >= cols as isize {
+                    j_wrapped = 0;
+                }
+                let index = grid_index(i_wrapped as usize, j_wrapped as usize, cols);
+                // Addition des valeurs des voisins
+                if !(i == row as isize && j == col as isize) {
+                    sum += current_cells[index] as u16;
+                }
+            } else {
+                // Si la grille n'est pas torique, on vérifie que les indices sont dans les limites de la grille
+                if i >= 0 && i < rows as isize && j >= 0 && j < cols as isize {
+                    let index = grid_index(i as usize, j as usize, cols);
+                    // Addition des valeurs des voisins
+                    if !(i == row as isize && j == col as isize) {
+                        sum += current_cells[index] as u16;
+                    }
+                }
+            }
+        }
+    }
+    sum
+}
+
+
 /// Met à jour l'état de la grille selon les règles du jeu de la vie.
 ///
 /// Cette fonction parcourt chaque cellule de la grille, compte ses voisins vivants et applique
@@ -429,7 +518,7 @@ pub fn grid_update_conways(
         for col in 0..cols {
             let current_index = grid_index(row, col, cols); // Calcul de l'index de la cellule actuelle
             let neighbors_count =
-                grid_count_neighbors(row, col, &current_cells, rows, cols, toricgrid); // Comptage des voisins vivants de la cellule actuelle
+                grid_count_neighbors_conways(row, col, &current_cells, rows, cols, toricgrid); // Comptage des voisins vivants de la cellule actuelle
                                                                                        // Application des règles du jeu de la vie pour mettre à jour l'état de la cellule
             next_cells[current_index] = match (current_cells[current_index], neighbors_count) {
                 // Si la cellule est vivante et a 2 ou 3 voisins vivants, elle reste vivante
@@ -500,7 +589,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_grid_count_neighbors_toricgrid_enabled() {
+    fn test_grid_count_neighbors_conways_toricgrid_enabled() {
         let current_cells = vec![0, 0, 0, 2, 0, 2, 0, 0, 0];
         let rows = 3;
         let cols = 3;
@@ -508,23 +597,23 @@ mod tests {
 
         // Vérifie le nombre de voisins de la cellule en row 1 et colonne
         assert_eq!(
-            grid_count_neighbors(1, 1, &current_cells, rows, cols, toricgrid),
+            grid_count_neighbors_conways(1, 1, &current_cells, rows, cols, toricgrid),
             2
         );
         // Vérifie le nombre de voisins de la cellule en haut à gauche
         assert_eq!(
-            grid_count_neighbors(0, 0, &current_cells, rows, cols, toricgrid),
+            grid_count_neighbors_conways(0, 0, &current_cells, rows, cols, toricgrid),
             2
         );
         // Vérifie le nombre de voisins de la cellule en bas à droite
         assert_eq!(
-            grid_count_neighbors(2, 2, &current_cells, rows, cols, toricgrid),
+            grid_count_neighbors_conways(2, 2, &current_cells, rows, cols, toricgrid),
             2
         );
     }
 
     #[test]
-    fn test_grid_count_neighbors_toricgrid_disabled() {
+    fn test_grid_count_neighbors_conways_toricgrid_disabled() {
         let current_cells = vec![0, 0, 0, 2, 0, 2, 0, 0, 0];
         let rows = 3;
         let cols = 3;
@@ -532,17 +621,17 @@ mod tests {
 
         // Vérifie le nombre de voisins de la cellule centrale en row 1 et colonne 1
         assert_eq!(
-            grid_count_neighbors(1, 1, &current_cells, rows, cols, toricgrid),
+            grid_count_neighbors_conways(1, 1, &current_cells, rows, cols, toricgrid),
             2
         );
         // Vérifie le nombre de voisins de la cellule en haut à gauche
         assert_eq!(
-            grid_count_neighbors(0, 0, &current_cells, rows, cols, toricgrid),
+            grid_count_neighbors_conways(0, 0, &current_cells, rows, cols, toricgrid),
             1
         );
         // Vérifie le nombre de voisins de la cellule en bas à droite
         assert_eq!(
-            grid_count_neighbors(2, 2, &current_cells, rows, cols, toricgrid),
+            grid_count_neighbors_conways(2, 2, &current_cells, rows, cols, toricgrid),
             1
         );
     }

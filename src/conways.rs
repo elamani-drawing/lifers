@@ -310,7 +310,7 @@ impl Grid for ConwaysGrid {
     ///
     /// ```
     fn count_neighbors(&self, row: usize, col: usize) -> usize {
-        grid_count_neighbors(
+        grid_count_neighbors_conways(
             row,
             col,
             &self.current_cells,

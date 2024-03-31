@@ -25,6 +25,18 @@ impl fmt::Display for LeniaGrid {
     }
 }
 
+impl LeniaGrid {
+    pub fn get_value_neighbors_lenia(&self, row: usize, col: usize) -> u16 {
+        grid_get_value_neighbors_lenia(
+            row,
+            col,
+            &self.current_cells,
+            self.rows,
+            self.cols,
+            self.toricgrid,
+        ) 
+    }
+}
 
 impl Grid for LeniaGrid {
     fn display(&self) {
@@ -102,10 +114,24 @@ impl Grid for LeniaGrid {
     fn index(&self, row: usize, col: usize) -> usize {
         grid_index(row, col, self.cols)
     }
-    
-    fn count_neighbors(&self, row: usize, col: usize) -> usize {
-        // finir
-        grid_count_neighbors(
+     
+    /// Compte le nombre de voisins vivants d'une cellule spécifiée dans la grille.
+    ///
+    /// # Arguments
+    ///
+    /// * `row` - L'indice de la ligne de la cellule dans la grille.
+    /// * `col` - L'indice de la colonne de la cellule dans la grille.
+    /// * `current_cells` - Vecteur contenant l'état actuel de chaque cellule de la grille.
+    /// * `rows` - Nombre de lignes de la grille.
+    /// * `cols` - Nombre de colonnes de la grille.
+    /// * `toricgrid` - Indique si les bords de la grille sont connectés, formant une grille torique.
+    ///
+    /// # Returns
+    ///
+    /// Le nombre de voisins vivants de la cellule spécifiée.
+    ///
+    fn count_neighbors(&self, row: usize, col: usize) -> usize { 
+        grid_count_neighbors_conways(
             row,
             col,
             &self.current_cells,
