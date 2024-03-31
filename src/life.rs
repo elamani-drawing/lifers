@@ -586,6 +586,11 @@ pub fn grid_convolution_neighbors_lenia(
 }
 
 
+/// La fonction de croissance qui est appliqué par défaut à LeniaGrid
+pub fn lenia_growth_function_default(value : u8) -> u8 {
+    return value
+}
+
 /// Met à jour l'état de la grille selon les règles du jeu de la vie.
 ///
 /// Cette fonction parcourt chaque cellule de la grille, compte ses voisins vivants et applique
@@ -646,14 +651,81 @@ pub fn grid_update_conways(
     std::mem::swap(current_cells, next_cells);
 }
 
+/// Met à jour l'état de la grille en appliquant une fonction de croissance sur la moyenne pondérée des valeurs des cellules voisines.
+///
+/// # Arguments
+///
+/// * `current_cells` - Vecteur contenant l'état actuel de chaque cellule de la grille.
+/// * `next_cells` - Vecteur pour stocker le prochain état de la grille après la mise à jour.
+/// * `rows` - Nombre de lignes de la grille.
+/// * `cols` - Nombre de colonnes de la grille.
+/// * `toricgrid` - Indique si les bords de la grille sont connectés, formant une grille torique.
+/// * `filter` - Filtre pour pondérer les valeurs des cellules voisines.
+/// * `neighbors_filter` - Nombre de voisins pris en compte dans le calcul de la moyenne pondérée.
+/// * `growth_function` - Fonction de croissance à appliquer sur la moyenne pondérée des valeurs environnantes.
+///
+/// # Exemple
+///
+/// ```
+/// use crate::lifers::{grid_update_lenia, grid_index, grid_convolution_neighbors_lenia};
+///
+/// // Définir les paramètres de la grille
+/// let rows = 3;
+/// let cols = 3;
+/// let toricgrid = true;
+/// let filter = vec![
+///     1, 1, 1,
+///     1, 0, 1,
+///     1, 1, 1,
+/// ];
+/// let neighbors_filter = 8;
+///
+/// // Définir une fonction de croissance simple pour l'exemple
+/// fn simple_growth_function(value: u8) -> u8 {
+///     value + 1
+/// }
+///
+/// // Créer des vecteurs pour stocker l'état actuel et le prochain état de la grille
+/// let mut current_cells = vec![0; rows * cols];
+/// let mut next_cells = vec![0; rows * cols];
+///
+/// // Appel de la fonction pour mettre à jour l'état de la grille (une grille remplie de 0)
+/// grid_update_lenia(&mut current_cells, &mut next_cells, rows, cols, toricgrid, &filter, neighbors_filter, simple_growth_function);
+///
+/// // Vérification de l'état de la cellule centrale après la mise à jour
+/// let central_index = grid_index(1, 1, cols); 
+/// assert_eq!(current_cells[central_index], 1); // La valeur de la cellule centrale devrait être mise à jour selon la fonction de croissance
+/// 
+/// // Appel de la fonction pour mettre à jour l'état de la grille (une grille remplie de 1)
+/// grid_update_lenia(&mut current_cells, &mut next_cells, rows, cols, toricgrid, &filter, neighbors_filter, simple_growth_function);
+///
+/// // Vérification de l'état de la cellule centrale après la mise à jour
+/// let central_index = grid_index(1, 1, cols); 
+/// assert_eq!(current_cells[central_index], 2); // La valeur de la cellule centrale devrait être mise à jour selon la fonction de croissance
+/// ```
+///
 pub fn grid_update_lenia(
     current_cells: &mut Vec<u8>,
     next_cells: &mut Vec<u8>,
     rows: usize,
     cols: usize,
     toricgrid: bool,
+    filter: &[u8], 
+    neighbors_filter: usize,
+    growth_function: fn(u8) -> u8,
 ) {
-
+    // Parcours de chaque cellule de la grille
+    for row in 0..rows {
+        for col in 0..cols {
+            let current_index: usize = grid_index(row, col, cols); // Calcul de l'index de la cellule actuelle
+            let weighted_sum : u16 = grid_convolution_neighbors_lenia(row, col, current_cells, rows, cols, toricgrid, filter); // Calcul de la somme pondérée des valeurs des cellules voisines
+            let average : u8 = (weighted_sum / neighbors_filter as u16) as u8; // Calcul de la moyenne des valeurs environnantes
+            let updated_value : u8 = growth_function(average); // Application de la fonction de croissance sur la moyenne des valeurs environnantes
+            next_cells[current_index] = updated_value; // Mise à jour de la valeur de la cellule dans le prochain état de la grille
+        }
+    }
+    // Échange des vecteurs d'état actuel avec le prochain pour mettre à jour l'état de la grille
+    std::mem::swap(current_cells, next_cells);
 }
 
 /// Dessine une grille.

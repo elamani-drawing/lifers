@@ -16,6 +16,11 @@ pub struct LeniaGrid {
     cols: usize,
     /// Indique si les bords de la grille sont connectés, formant une grille torique. Si vrai, les bords gauche et droit ainsi que les bords supérieur et inférieur sont connectés.
     toricgrid: bool, 
+    /// Filtre à appliqué l'ors de la convolution par filtre pour le calcul de la valeur du voisinage d'une cellule
+    filter: Vec<u8>,
+    /// le nombre de voisins dans le filtre
+    neighbors_filter : usize, 
+    growth_function : fn(u8)-> u8,
 }
 
 // Implémentation d'une méthode pour afficher la grille de Lenia
@@ -26,15 +31,46 @@ impl fmt::Display for LeniaGrid {
 }
 
 impl LeniaGrid {
+    /// Calcule la valeur voisinage résultante de l'application d'une convolution par filtre sur les valeurs des cellules voisines
+    /// autour d'une cellule spécifiée dans la grille, en utilisant le filtre défini (par défaut c'est le filtrage en anneau).
+    ///
+    /// # Arguments
+    ///
+    /// * `row` - L'indice de la ligne de la cellule dans la grille.
+    /// * `col` - L'indice de la colonne de la cellule dans la grille.
+    ///
+    /// # Returns
+    ///
+    /// La valeur résultante de l'application de la convolution sur les valeurs des cellules voisines. 
     pub fn get_value_neighbors_lenia(&self, row: usize, col: usize) -> u16 {
-        grid_get_value_neighbors_lenia(
+        grid_convolution_neighbors_lenia(
             row,
             col,
             &self.current_cells,
             self.rows,
             self.cols,
             self.toricgrid,
+            &self.filter
         ) 
+    }
+    
+    /// Setter pour editer le vecteur contenant les valeurs du filtre à appliquer lors du calcul de la valeur du voisinage
+    pub fn set_filter(&mut self, filter : Vec<u8>) {
+        let mut count_neighbors : usize = 0;
+        for &value in &filter {
+            if value == 1 {
+                count_neighbors += 1;
+            }
+        }
+        // Il doit y avoir au moin un voisin dans le filtre
+        assert!(count_neighbors > 0);
+        self.neighbors_filter = count_neighbors;
+        self.filter = filter;
+    }
+
+    /// Setter pour editer la function de croissance
+    pub fn set_growth_function(&mut self, growth_function : fn(u8) -> u8) {
+        self.growth_function = growth_function;
     }
 }
 
@@ -50,6 +86,13 @@ impl Grid for LeniaGrid {
             rows,
             cols,
             toricgrid: toricgrid,
+            filter :  vec![
+                1, 1, 1,
+                1, 0, 1,
+                1, 1, 1,
+            ], // Par defaut nous utilisant un filtre en anneau
+            neighbors_filter : 8,
+            growth_function : lenia_growth_function_default,
         }
     }
     
@@ -67,6 +110,13 @@ impl Grid for LeniaGrid {
             rows,
             cols,
             toricgrid: toricgrid,
+            filter :  vec![
+                1, 1, 1,
+                1, 0, 1,
+                1, 1, 1,
+            ], // Par defaut nous utilisant un filtre en anneau
+            neighbors_filter : 8,
+            growth_function : lenia_growth_function_default,
         }
     }
     
@@ -80,6 +130,13 @@ impl Grid for LeniaGrid {
             rows,
             cols,
             toricgrid,
+            filter :  vec![
+                1, 1, 1,
+                1, 0, 1,
+                1, 1, 1,
+            ], // Par defaut nous utilisant un filtre en anneau
+            neighbors_filter : 8,
+            growth_function : lenia_growth_function_default,
         }
     }
      
@@ -149,6 +206,9 @@ impl Grid for LeniaGrid {
             self.rows,
             self.cols,
             self.toricgrid,
+            &self.filter,
+            self.neighbors_filter, 
+            self.growth_function
         );
     }
     
