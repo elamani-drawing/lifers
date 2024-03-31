@@ -45,7 +45,7 @@ impl Grid for LeniaGrid {
         let mut rng: ThreadRng = rand::thread_rng();
         let mut current_cells: Vec<u8> = Vec::with_capacity(rows * cols);
         for _ in 0..(rows * cols) {
-            let cell_state: u8 = rng.gen_range(0..2); // Génère aléatoirement 0 ou 1
+            let cell_state: u8 = rng.gen_range(0..255); 
             current_cells.push(cell_state);
         }
 
@@ -70,15 +70,7 @@ impl Grid for LeniaGrid {
             toricgrid,
         }
     }
-    
-    fn set_color_alive(&mut self, color: Option<ggez::graphics::Color>)  {
-        // These methods are not implemented and should not be used.
-    }
-    
-    fn set_color_not_alive(&mut self, color: Option<ggez::graphics::Color>)  {
-        // These methods are not implemented and should not be used.
-    }
-    
+     
     /// Renvoie le nombre de lignes de la grille.
     fn rows(&self) -> usize {
         self.rows
@@ -102,9 +94,6 @@ impl Grid for LeniaGrid {
         grid_set_cell_state(row, col, alive, &mut self.current_cells, self.cols)
     }
     
-    fn toggle_cell_state(&mut self, row: usize, col: usize) {
-        // These methods are not implemented and should not be used.
-    }
     
     fn is_alive(&self, row: usize, col: usize) -> bool {
         grid_is_alive(row, col, &self.current_cells, self.cols)

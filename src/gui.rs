@@ -77,7 +77,12 @@ impl<G: Grid> EventHandler for LifeGui<G> {
             // Vérifier que les indices sont valides
             if row < self.grid.rows() && col < self.grid.cols() {
                 // Inverser l'état de la cellule (de morte à vivante ou de vivante à morte)
-                self.grid.toggle_cell_state(row, col);
+                // self.grid.toggle_cell_state(row, col);
+                if self.grid.is_alive(row, col) {
+                    self.grid.set_cell_state(row, col, 0); // dead
+                }else {
+                    self.grid.set_cell_state(row, col, 1); // can live
+                }
             }
         }
         Ok(())

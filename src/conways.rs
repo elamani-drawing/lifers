@@ -27,6 +27,46 @@ impl fmt::Display for ConwaysGrid {
     }
 }
 
+impl ConwaysGrid {
+    /// Setter pour la couleur des cellules vivantes
+    pub fn set_color_alive(&mut self, color: Option<Color>) {
+        self.color_alive = color;
+    }
+
+    /// Setter pour la couleur des cellules mortes
+    pub fn set_color_not_alive(&mut self, color: Option<Color>) {
+        self.color_not_alive = color;
+    }
+
+    
+    /// Inverse l'état d'une cellule spécifiée dans la grille.
+    ///
+    /// Si la cellule est vivante, elle devient morte, et si elle est morte, elle devient vivante.
+    ///
+    /// # Arguments
+    ///
+    /// * `row` - L'indice de la ligne de la cellule dans la grille.
+    /// * `col` - L'indice de la colonne de la cellule dans la grille.
+    ///
+    /// # Exemple
+    ///
+    /// ```
+    /// use crate::lifers::ConwaysGrid;
+    /// use crate::lifers::Grid;
+    ///
+    /// let mut grid = ConwaysGrid::new(3, 3, true);
+    ///
+    /// // Inverse l'état de la cellule
+    /// grid.toggle_cell_state(1, 1);
+    ///
+    /// // Vérifie si la cellule est maintenant vivante
+    /// assert_eq!(grid.is_alive(1, 1), true);
+    /// ```
+    pub fn toggle_cell_state(&mut self, row: usize, col: usize) {
+        grid_toggle_cell_state(row, col, &mut self.current_cells, self.cols)
+    }
+}
+
 impl Grid for ConwaysGrid {
     fn display(&self) {
         println!("{}", self);
@@ -133,15 +173,6 @@ impl Grid for ConwaysGrid {
         }
     }
 
-    /// Setter pour la couleur des cellules vivantes
-    fn set_color_alive(&mut self, color: Option<Color>) {
-        self.color_alive = color;
-    }
-
-    /// Setter pour la couleur des cellules mortes
-    fn set_color_not_alive(&mut self, color: Option<Color>) {
-        self.color_not_alive = color;
-    }
     /// Renvoie le nombre de lignes de la grille.
     fn rows(&self) -> usize {
         self.rows
@@ -193,32 +224,6 @@ impl Grid for ConwaysGrid {
         grid_set_cell_state(row, col, alive, &mut self.current_cells, self.cols)
     }
 
-    /// Inverse l'état d'une cellule spécifiée dans la grille.
-    ///
-    /// Si la cellule est vivante, elle devient morte, et si elle est morte, elle devient vivante.
-    ///
-    /// # Arguments
-    ///
-    /// * `row` - L'indice de la ligne de la cellule dans la grille.
-    /// * `col` - L'indice de la colonne de la cellule dans la grille.
-    ///
-    /// # Exemple
-    ///
-    /// ```
-    /// use crate::lifers::ConwaysGrid;
-    /// use crate::lifers::Grid;
-    ///
-    /// let mut grid = ConwaysGrid::new(3, 3, true);
-    ///
-    /// // Inverse l'état de la cellule
-    /// grid.toggle_cell_state(1, 1);
-    ///
-    /// // Vérifie si la cellule est maintenant vivante
-    /// assert_eq!(grid.is_alive(1, 1), true);
-    /// ```
-    fn toggle_cell_state(&mut self, row: usize, col: usize) {
-        grid_toggle_cell_state(row, col, &mut self.current_cells, self.cols)
-    }
 
     /// Vérifie si une cellule spécifiée dans la grille est vivante.
     ///

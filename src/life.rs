@@ -28,13 +28,7 @@ pub trait Grid {
     
     /// Méthode pour créer une grille à partir d'un vecteur de cellules
     fn from_vect(cels: Vec<u8>, rows: usize, cols: usize, toricgrid: bool) -> Self ;
-
-    /// Setter pour la couleur des cellules vivantes
-    fn set_color_alive(&mut self, color: Option<Color>) ;
-
-    /// Setter pour la couleur des cellules mortes
-    fn set_color_not_alive(&mut self, color: Option<Color>) ;
-
+ 
     /// Méthode pour renvoyer le nombre de lignes de la grille
     fn rows(&self) -> usize;
 
@@ -56,17 +50,6 @@ pub trait Grid {
     /// * `alive` - Un booléen indiquant si la cellule doit être mise à l'état vivant (`true`) ou mort (`false`).
     ///
     fn set_cell_state(&mut self, row: usize, col: usize, alive: u8);
-
-    /// Inverse l'état d'une cellule spécifiée dans la grille.
-    ///
-    /// Si la cellule est vivante, elle devient morte, et si elle est morte, elle devient vivante.
-    ///
-    /// # Arguments
-    ///
-    /// * `row` - L'indice de la ligne de la cellule dans la grille.
-    /// * `col` - L'indice de la colonne de la cellule dans la grille.
-    ///
-    fn toggle_cell_state(&mut self, row: usize, col: usize);
 
     /// Vérifie si une cellule spécifiée dans la grille est vivante.
     ///
